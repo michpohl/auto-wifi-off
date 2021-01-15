@@ -12,12 +12,14 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import com.example.myapplication.databinding.ActivityMainBinding
 import com.google.android.material.snackbar.Snackbar
 import timber.log.Timber
-import java.io.DataOutputStream
-import java.io.IOException
+
+lateinit var networks: ConfiguredNetworksHandler
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var networks: ConfiguredNetworksHandler
+    private val shell = ShellFish()
+    private lateinit var work: WorkRepository
+
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
 
@@ -34,49 +36,29 @@ class MainActivity : AppCompatActivity() {
         appBarConfiguration = AppBarConfiguration(navController.graph)
         setupActionBarWithNavController(navController, appBarConfiguration)
 
+
         binding.fab.setOnClickListener { view ->
-            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+            shell.exists()
+            val isConnected = networks.getActiveNetworkSsid()?.contains("the landing strip") == true
+            Snackbar.make(view, "Is connected to the landing strip? $isConnected", Snackbar.LENGTH_LONG)
                 .setAction("Action", null).show()
-//            sudo("reboot")
+            with(shell) {
+                if (isConnected) {
+                    turnOffWifi()
+                    Snackbar.make(view, "Wifi should be off now", Snackbar.LENGTH_LONG).setAction(" Action ", null).show()
+                }
+            }
         }
         networks = ConfiguredNetworksHandler(
             application,
             applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
         )
-        doSomeLogging()
-
+        work = WorkRepository(networks)
+        startWork()
     }
 
-    private fun doSomeLogging() {
-
-        d("NetworkAccess: ${networks.hasInternetAccessViaWifi()}")
-        d("Active network: ${networks.getActiveNetworkSsid()}, ${networks.getActiveNetworkInfo()}")
-    }
-
-    fun sudo(vararg strings: String) {
-        try {
-            val su = Runtime.getRuntime().exec("su")
-            val outputStream = DataOutputStream(su.outputStream)
-            for (s in strings) {
-                outputStream.writeBytes(
-                    """
-                    $s
-                    
-                    """.trimIndent()
-                )
-                outputStream.flush()
-            }
-            outputStream.writeBytes("exit\n")
-            outputStream.flush()
-            try {
-                su.waitFor()
-            } catch (e: InterruptedException) {
-                e.printStackTrace()
-            }
-            outputStream.close()
-        } catch (e: IOException) {
-            e.printStackTrace()
-        }
+    private fun startWork() {
+        work.watchWifi(context = this)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
