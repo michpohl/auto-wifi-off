@@ -9,11 +9,13 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
+import androidx.work.WorkManager
 import com.example.myapplication.databinding.ActivityMainBinding
 import com.google.android.material.snackbar.Snackbar
 import timber.log.Timber
 
 lateinit var networks: ConfiguredNetworksHandler
+lateinit var workManager : WorkManager
 
 class MainActivity : AppCompatActivity() {
 
@@ -54,6 +56,7 @@ class MainActivity : AppCompatActivity() {
             applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
         )
         work = WorkRepository(networks)
+        workManager = WorkManager.getInstance(applicationContext)
         startWork()
     }
 

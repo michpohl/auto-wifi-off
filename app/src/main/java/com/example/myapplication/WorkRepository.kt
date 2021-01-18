@@ -21,13 +21,10 @@ class WorkRepository(networks: ConfiguredNetworksHandler) {
         TimeUnit.MINUTES,
         15, // flex interval - worker will run somewhen within this period of time, but at the end of repeating interval
         TimeUnit.MINUTES
-    ).build()
 
 
     fun watchWifi(context: Context) {
-        WorkManager
-            .getInstance(context)
-            .enqueue(periodicWatchWifiWorkRequest)
+        workManager.enqueue(periodicWatchWifiWorkRequest)
     }
 
 }
